@@ -61,16 +61,14 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 
-    // MQTT - Eclipse Paho Client (sin el servicio Android deprecado)
+    // MQTT - Eclipse Paho Client
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
 
-    // AndroidX LocalBroadcastManager (requerido para compatibilidad)
+    // AndroidX LocalBroadcastManager
     implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
 
-    // AndroidX Legacy Support (para compatibilidad con Paho)
+    // AndroidX Legacy Support
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
-
-    // OkHttp para WebSocket (requerido para conexiones wss://)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Coroutines

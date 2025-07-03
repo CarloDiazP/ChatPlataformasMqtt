@@ -25,24 +25,21 @@ import kotlinx.coroutines.withContext
 class ChatViewModel(private val context: Context) : ViewModel() {
 
     companion object {
-        // Configuración EMQX Cloud - CAMBIAR ESTOS VALORES
-        // Opción 1: WebSocket sobre TLS (wss://)
+
         // private const val BROKER_URL = "wss://g5150556.ala.eu-central-1.emqxsl.com:8084/mqtt"
 
-        // Opción 2: MQTT sobre TLS (ssl://) - Descomenta esta línea si prefieres MQTT nativo
         private const val BROKER_URL = "ssl://g5150556.ala.eu-central-1.emqxsl.com:8883"
 
         private val CLIENT_ID = "AndroidClient_${UUID.randomUUID()}"
         private const val TOPIC = "demo/chat/room1"
 
-        // Autenticación - Si tu deployment requiere credenciales, agrégalas aquí
-        private const val USERNAME = "carlo" // Dejar vacío si no requiere autenticación
-        private const val PASSWORD = "123456" // Dejar vacío si no requiere autenticación
+        private const val USERNAME = "carlo"
+        private const val PASSWORD = "123456"
 
         private const val QOS = 1
 
-        // Nombre del archivo del certificado CA en la carpeta assets
-        private const val CA_CERTIFICATE_FILE = "emqxsl-ca.crt" // Cambiar por el nombre de tu archivo
+
+        private const val CA_CERTIFICATE_FILE = "emqxsl-ca.crt"
     }
 
     private val _messages = MutableStateFlow<List<Msg>>(emptyList())
@@ -75,7 +72,6 @@ class ChatViewModel(private val context: Context) : ViewModel() {
                             val payload = String(it.payload)
                             Log.d(tag, "Mensaje recibido: $payload")
 
-                            // Parsear el mensaje (formato: "clientId|timestamp|texto")
                             val parts = payload.split("|")
                             if (parts.size >= 3) {
                                 val senderId = parts[0]
@@ -109,10 +105,9 @@ class ChatViewModel(private val context: Context) : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val connectOptions = MqttConnectOptions().apply {
-                    isAutomaticReconnect = false // Manejamos la reconexión manualmente
+                    isAutomaticReconnect = false
                     isCleanSession = false
 
-                    // Configurar SSL/TLS con certificado CA
                     if (BROKER_URL.startsWith("ssl://") || BROKER_URL.startsWith("wss://")) {
                         try {
                             socketFactory = getSSLSocketFactory()
@@ -121,17 +116,14 @@ class ChatViewModel(private val context: Context) : ViewModel() {
                         }
                     }
 
-                    // Configurar credenciales si es necesario
                     if (USERNAME.isNotEmpty()) {
                         userName = USERNAME
                         password = PASSWORD.toCharArray()
                     }
 
-                    // Configurar timeouts
                     connectionTimeout = 30
                     keepAliveInterval = 20
 
-                    // Configurar Last Will Testament (LWT)
                     setWill(
                         TOPIC,
                         "$CLIENT_ID|${System.currentTimeMillis()}|Usuario desconectado".toByteArray(),
@@ -143,7 +135,6 @@ class ChatViewModel(private val context: Context) : ViewModel() {
                 mqttClient?.connect(connectOptions)
                 Log.d(tag, "Conexión exitosa")
 
-                // Suscribirse al topic
                 subscribeToTopic()
 
             } catch (e: MqttException) {
@@ -156,7 +147,7 @@ class ChatViewModel(private val context: Context) : ViewModel() {
         withContext(Dispatchers.IO) {
             try {
                 if (mqttClient?.isConnected == false) {
-                    Thread.sleep(5000) // Esperar 5 segundos antes de reconectar
+                    Thread.sleep(5000)
                     connect()
                 }
             } catch (e: Exception) {
@@ -198,7 +189,6 @@ class ChatViewModel(private val context: Context) : ViewModel() {
 
     private fun getSSLSocketFactory(): SSLSocketFactory {
         return try {
-            // Cargar el certificado CA desde assets
             val certificateFactory = CertificateFactory.getInstance("X.509")
             val caInputStream: InputStream = context.assets.open(CA_CERTIFICATE_FILE)
 
@@ -206,20 +196,17 @@ class ChatViewModel(private val context: Context) : ViewModel() {
                 certificateFactory.generateCertificate(it) as X509Certificate
             }
 
-            // Crear un KeyStore con nuestro CA
             val keyStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
                 load(null, null)
                 setCertificateEntry("ca", ca)
             }
 
-            // Crear un TrustManager que confíe en nuestro CA
             val trustManagerFactory = TrustManagerFactory.getInstance(
                 TrustManagerFactory.getDefaultAlgorithm()
             ).apply {
                 init(keyStore)
             }
 
-            // Crear un SSLContext con nuestro TrustManager
             val sslContext = SSLContext.getInstance("TLS").apply {
                 init(null, trustManagerFactory.trustManagers, null)
             }

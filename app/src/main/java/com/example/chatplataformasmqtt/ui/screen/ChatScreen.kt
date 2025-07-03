@@ -30,12 +30,10 @@ fun ChatScreen(viewModel: ChatViewModel) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    // Conectar al iniciar
     LaunchedEffect(Unit) {
         viewModel.connect()
     }
 
-    // Auto-scroll cuando llegan nuevos mensajes
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             coroutineScope.launch {
@@ -60,7 +58,6 @@ fun ChatScreen(viewModel: ChatViewModel) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Lista de mensajes (invertida)
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -75,7 +72,6 @@ fun ChatScreen(viewModel: ChatViewModel) {
                 }
             }
 
-            // Input de mensaje
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
